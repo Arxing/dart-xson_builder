@@ -1,0 +1,8 @@
+builders:
+  xson_builder:
+    import: "package:xson_builder/src/builder/json_builder.dart"
+    builder_factories:
+    - jsonBuilder
+    build_extensions: {".dart: [".xson.dart"]}
+    auto_apply: root_package
+    build_to: source

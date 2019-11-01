@@ -1,0 +1,13 @@
+{
+    "name": "Apple",
+    "price": 100,
+    "detail": {
+        "color": "blue",
+        "weight_history": [
+            10.5,
+            12.8,
+            14.9,
+            20
+        ]
+    }
+}
