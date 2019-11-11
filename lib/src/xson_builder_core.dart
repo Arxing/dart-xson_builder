@@ -4,10 +4,8 @@ import 'package:dartpoet/dartpoet.dart';
 import 'package:named_mode/named_mode.dart';
 import 'package:xfile/xfile.dart';
 import 'package:xson/xson.dart';
-import 'package:logging/logging.dart';
 
 part 'ancestor_info.dart';
-
 part 'dart_keywords.dart';
 
 class XsonBuilder {
