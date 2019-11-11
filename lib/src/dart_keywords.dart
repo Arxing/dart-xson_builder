@@ -1,4 +1,6 @@
-List<String> DART_KEYWORDS = [
+part of 'xson_builder_core.dart';
+
+List<String> _DART_KEYWORDS = [
   'abstract',
   'dynamic',
   'implements',

@@ -1,9 +1,19 @@
+import 'dart:io';
+
 import 'package:xson_builder/xson_builder.dart';
+import 'package:xson/xson.dart';
 
-main() {}
+XsonBuilder builder = XsonBuilder();
 
-class Test {
-  int a;
+main() async {
+  print("generating...");
+  generateBeanWithJsonContent();
+  await executeBuildRunner();
+  print("generate success");
+}
 
-  void func1() {}
+void generateBeanWithJsonContent() {
+  String content = File("./example/json/sample1.json").readAsStringSync();
+  JsonElement rootElement = JsonElement.fromJsonString(content);
+  builder.generateAndWriteFile("./example/bean", "sample1", rootElement);
 }

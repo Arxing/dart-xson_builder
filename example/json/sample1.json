@@ -1,13 +1,68 @@
 {
-    "name": "Apple",
-    "price": 100,
-    "detail": {
-        "color": "blue",
-        "weight_history": [
-            10.5,
-            12.8,
-            14.9,
-            20
+    "a": 100,
+    "b": 200.5,
+    "c": false,
+    "d": "This is a string",
+    "e": [
+        1,
+        2,
+        3,
+        4
+    ],
+    "f": {
+        "f1": 10,
+        "f2": "apple"
+    },
+    "g": [
+        [
+            1,
+            2
+        ],
+        [
+            3,
+            4,
+            5
         ]
+    ],
+    "h": [
+        {
+            "name": "Google",
+            "color": "blue"
+        },
+        {
+            "name": "Yahoo",
+            "color": "pink"
+        }
+    ],
+    "i": [
+        1,
+        true,
+        20.8,
+        "soup",
+        {
+            "isoup1": [
+                [
+                    [
+                        [
+                            400
+                        ]
+                    ]
+                ]
+            ]
+        }
+    ],
+    "j": {
+        "j1": {
+            "j11": {
+                "j111": {
+                    "j1111": {
+                        "j11111": [
+                            "hello",
+                            "world"
+                        ]
+                    }
+                }
+            }
+        }
     }
 }
