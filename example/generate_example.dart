@@ -1,7 +1,6 @@
 import 'dart:io';
 
 import 'package:xson_builder/xson_builder.dart';
-import 'package:xson/xson.dart';
 
 XsonBuilder builder = XsonBuilder();
 
@@ -16,12 +15,10 @@ main() async {
 
 void generateBeanWithJsonContent() {
   String content = File("./example/json/sample_json.json").readAsStringSync();
-  JsonElement rootElement = JsonElement.fromJsonString(content);
-  builder.generateAndWriteFile("./example", "sample1.dart", rootElement);
+  builder.generateAndWriteFile("./example", "sample1.dart", content);
 }
 
 String generateBeanAndGetFileContent() {
   String content = File("./example/json/sample_json.json").readAsStringSync();
-  JsonElement rootElement = JsonElement.fromJsonString(content);
-  return builder.generateAndGetFileContent("sample2.dart", rootElement);
+  return builder.generateAndGetFileContent("sample2.dart", content);
 }

@@ -28,31 +28,31 @@ class XsonBuilder {
   File generateAndWriteFile(
     String outputDir,
     String outputFileName,
-    JsonElement rootElement, {
+    String json, {
     String rootClassName,
     String classSuffix,
     bool fromBuildRunner,
   }) {
-    var dartFile = _generate(outputFileName, rootElement,
-        rootClassName: rootClassName, classSuffix: classSuffix, fromBuildRunner: fromBuildRunner);
+    var dartFile =
+        _generate(outputFileName, json, rootClassName: rootClassName, classSuffix: classSuffix, fromBuildRunner: fromBuildRunner);
     return dartFile.outputSync(XFile.combine(outputDir, outputFileName).file.path);
   }
 
   String generateAndGetFileContent(
     String outputFileName,
-    JsonElement rootElement, {
+    String json, {
     String rootClassName,
     String classSuffix,
     bool fromBuildRunner,
   }) {
-    var dartFile = _generate(outputFileName, rootElement,
-        rootClassName: rootClassName, classSuffix: classSuffix, fromBuildRunner: fromBuildRunner);
+    var dartFile =
+        _generate(outputFileName, json, rootClassName: rootClassName, classSuffix: classSuffix, fromBuildRunner: fromBuildRunner);
     return dartFile.outputContent();
   }
 
   DartFile _generate(
     String outputFileName,
-    JsonElement rootElement, {
+    String json, {
     String rootClassName,
     String classSuffix,
     bool fromBuildRunner,
@@ -66,7 +66,7 @@ class XsonBuilder {
     _fromJsonCache.clear();
     _toJsonCache.clear();
     _resolveDependencies();
-    _iterate(element: rootElement, ancestors: []);
+    _iterate(element: xson.decodeToJsonElement(json), ancestors: []);
     _resolveCaches();
     return DartFile.fromFileSpec(_fileSpec);
   }

@@ -4,7 +4,6 @@ import 'package:analyzer/dart/element/element.dart';
 import 'package:build/build.dart';
 import 'package:build/src/builder/build_step.dart';
 import 'package:source_gen/source_gen.dart';
-import 'package:xson/xson.dart';
 import 'package:xson_annotation/xson_annotation.dart';
 import 'package:xson_builder/xson_builder.dart';
 
@@ -17,10 +16,9 @@ class XsonBeanGenerator extends GeneratorForAnnotation<XsonBean> {
     String rootClassName = annotation.peek("rootClassName")?.stringValue;
     String classSuffix = annotation.peek("classSuffix")?.stringValue;
 
-    JsonElement rootElement = xson.decodeToJsonElement(jsonContent);
     return xsonBuilder.generateAndGetFileContent(
       element.source.shortName,
-      rootElement,
+      jsonContent,
       rootClassName: rootClassName,
       classSuffix: classSuffix,
       fromBuildRunner: true,
