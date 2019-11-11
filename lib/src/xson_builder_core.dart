@@ -4,6 +4,7 @@ import 'package:dartpoet/dartpoet.dart';
 import 'package:named_mode/named_mode.dart';
 import 'package:xfile/xfile.dart';
 import 'package:xson/xson.dart';
+import 'package:logging/logging.dart';
 
 part 'ancestor_info.dart';
 
@@ -14,67 +15,69 @@ class XsonBuilder {
   Map<String, MethodSpec> _fromJsonCache = {};
   Map<String, MethodSpec> _toJsonCache = {};
   FileSpec _fileSpec;
-  ClassSpec _fromJsonWrapper;
-  ClassSpec _toJsonWrapper;
   String _defaultRootClassName;
-  String _fileNameWithoutExtension;
   String _generatedClassSuffix;
   bool _fromBuildRunner;
+  XFile _fileInfo;
 
   String get rootClassName {
-    String pureFileName = _fileNameWithoutExtension.split(".").first;
+    String pureFileName = _fileInfo.fileName(withExtension: false).split(".").first;
     return _defaultRootClassName ?? renameTo__AnApple(pureFileName);
   }
 
   File generateAndWriteFile(
     String outputDir,
-    String outputNameWithoutExtension,
+    String outputFileName,
     JsonElement rootElement, {
     String rootClassName,
     String classSuffix,
-    bool fromBuildRunner = false,
+    bool fromBuildRunner,
   }) {
-    var dartFile = _generate(outputNameWithoutExtension, rootElement,
+    var dartFile = _generate(outputFileName, rootElement,
         rootClassName: rootClassName, classSuffix: classSuffix, fromBuildRunner: fromBuildRunner);
-    return dartFile.outputSync(XFile.combine(outputDir, outputNameWithoutExtension).file.path);
+    return dartFile.outputSync(XFile.combine(outputDir, outputFileName).file.path);
   }
 
   String generateAndGetFileContent(
-    String fileNameWithoutExtension,
+    String outputFileName,
     JsonElement rootElement, {
     String rootClassName,
     String classSuffix,
-    bool fromBuildRunner = false,
+    bool fromBuildRunner,
   }) {
-    var dartFile = _generate(fileNameWithoutExtension, rootElement,
+    var dartFile = _generate(outputFileName, rootElement,
         rootClassName: rootClassName, classSuffix: classSuffix, fromBuildRunner: fromBuildRunner);
     return dartFile.outputContent();
   }
 
   DartFile _generate(
-    String fileNameWithoutExtension,
+    String outputFileName,
     JsonElement rootElement, {
     String rootClassName,
     String classSuffix,
-    bool fromBuildRunner = false,
+    bool fromBuildRunner,
   }) {
-    _fromBuildRunner = fromBuildRunner;
+    _fromBuildRunner = fromBuildRunner ?? false;
     _fileSpec = FileSpec.build();
-    _fileNameWithoutExtension = fileNameWithoutExtension;
-    _generatedClassSuffix = classSuffix ?? "";
+    _fileInfo = XFile.fromPath(outputFileName);
+    _generatedClassSuffix = classSuffix ?? "bean";
     _defaultRootClassName = rootClassName;
     _classCache.clear();
     _fromJsonCache.clear();
     _toJsonCache.clear();
-    _fromJsonWrapper = ClassSpec.build("_FromJsonWrapper");
-    _toJsonWrapper = ClassSpec.build("_ToJsonWrapper");
-    _fileSpec.classes.add(_fromJsonWrapper);
-    _fileSpec.classes.add(_toJsonWrapper);
     _resolveDependencies();
     _iterate(element: rootElement, ancestors: []);
-    _fromJsonWrapper.methods = _fromJsonCache.values.toList();
-    _toJsonWrapper.methods = _toJsonCache.values.toList();
+    _resolveCaches();
     return DartFile.fromFileSpec(_fileSpec);
+  }
+
+  void _resolveCaches() {
+    if (_fromJsonCache.isNotEmpty) {
+      _fileSpec.classes.insert(0, ClassSpec.build("_FromJsonWrapper", methods: _fromJsonCache.values.toList()));
+    }
+    if (_toJsonCache.isNotEmpty) {
+      _fileSpec.classes.insert(0, ClassSpec.build("_ToJsonWrapper", methods: _toJsonCache.values.toList()));
+    }
   }
 
   PropertySpec _iterate({String objectKey, int arrayIndex, JsonElement element, List<_AncestorInfo> ancestors = const []}) {
@@ -195,7 +198,7 @@ class XsonBuilder {
     String code = transformCore;
     int listDepth = _calcListDepth(listType);
     for (var i = 0; i < listDepth; i++) {
-      code = "$variable.map(($variable) => $code).toList()";
+      code = "($variable as List).map(($variable) => $code).toList()";
     }
     code += ";";
 
@@ -270,9 +273,9 @@ class XsonBuilder {
   void _resolveDependencies() {
     _fileSpec.dependencies.add(DependencySpec.import("package:json_annotation/json_annotation.dart"));
     _fileSpec.dependencies.add(DependencySpec.import("package:type_translator/type_translator.dart"));
-
-    _fileSpec.dependencies.add(DependencySpec.part(
-        _fromBuildRunner ? "${_fileNameWithoutExtension}.xson.g.dart" : "${_fileNameWithoutExtension}.g.dart"));
+    var fileNameWithoutExtension = _fileInfo.fileName(withExtension: false);
+    _fileSpec.dependencies.add(
+        DependencySpec.part(_fromBuildRunner ? "${fileNameWithoutExtension}.xson.g.dart" : "${fileNameWithoutExtension}.g.dart"));
   }
 
   TypeToken _calcComponentType(JsonArray jsonArray, String objectKey, int arrayIndex, List<_AncestorInfo> ancestors) {
@@ -407,21 +410,28 @@ class XsonBuilder {
   }
 }
 
-Future<ProcessResult> executeBuildRunner({Encoding encoding = utf8}) async {
+Future<ProcessResult> executeBuildRunner({
+  Encoding encoding = utf8,
+  bool deleteConflictingOutputs = false,
+  bool showVerbose = false,
+}) async {
+  String runner;
+  List<String> commands;
   if (Platform.isWindows) {
-    return await Process.run(
-      'cmd.exe',
-      ['/c', 'flutter', 'packages', 'pub', 'run', 'build_runner', 'build'],
-      stdoutEncoding: encoding,
-      stderrEncoding: encoding,
-    );
+    runner = "cmd.exe";
+    commands = ['/c', 'flutter', 'packages', 'pub', 'run', 'build_runner', 'build'];
   } else if (Platform.isMacOS) {
-    return await Process.run(
-      '/bin/sh',
-      ['flutter', 'packages', 'pub', 'run', 'build_runner', 'build'],
-      stdoutEncoding: encoding,
-      stderrEncoding: encoding,
-    );
+    runner = "/bin/sh";
+    commands = ['flutter', 'packages', 'pub', 'run', 'build_runner', 'build'];
+  } else {
+    throw "Unsupported platform";
   }
-  throw "Unsupported platform";
+  if (deleteConflictingOutputs) commands.add("--delete-conflicting-outputs");
+  if (showVerbose) commands.add("--verbose");
+  return await Process.run(
+    runner,
+    commands,
+    stdoutEncoding: encoding,
+    stderrEncoding: encoding,
+  );
 }
