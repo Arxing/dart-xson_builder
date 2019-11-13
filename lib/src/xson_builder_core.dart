@@ -4,9 +4,9 @@ import 'package:dartpoet/dartpoet.dart';
 import 'package:named_mode/named_mode.dart';
 import 'package:xfile/xfile.dart';
 import 'package:xson/xson.dart';
+import 'package:xson_annotation/xson_annotation.dart';
 
 part 'ancestor_info.dart';
-part 'dart_keywords.dart';
 
 class XsonBuilder {
   Map<String, ClassSpec> _classCache = {};
@@ -17,6 +17,7 @@ class XsonBuilder {
   String _generatedClassSuffix;
   bool _fromBuildRunner;
   XFile _fileInfo;
+  PropertyRenameHandler _propertyRenameHandler;
 
   String get rootClassName {
     String pureFileName = _fileInfo.fileName(withExtension: false).split(".").first;
@@ -30,9 +31,16 @@ class XsonBuilder {
     String rootClassName,
     String classSuffix,
     bool fromBuildRunner,
+    PropertyRenameHandler handler,
   }) {
-    var dartFile =
-        _generate(outputFileName, json, rootClassName: rootClassName, classSuffix: classSuffix, fromBuildRunner: fromBuildRunner);
+    var dartFile = _generate(
+      outputFileName,
+      json,
+      rootClassName: rootClassName,
+      classSuffix: classSuffix,
+      fromBuildRunner: fromBuildRunner,
+      handler: handler,
+    );
     return dartFile.outputSync(XFile.combine(outputDir, outputFileName).file.path);
   }
 
@@ -42,9 +50,16 @@ class XsonBuilder {
     String rootClassName,
     String classSuffix,
     bool fromBuildRunner,
+    PropertyRenameHandler handler,
   }) {
-    var dartFile =
-        _generate(outputFileName, json, rootClassName: rootClassName, classSuffix: classSuffix, fromBuildRunner: fromBuildRunner);
+    var dartFile = _generate(
+      outputFileName,
+      json,
+      rootClassName: rootClassName,
+      classSuffix: classSuffix,
+      fromBuildRunner: fromBuildRunner,
+      handler: handler,
+    );
     return dartFile.outputContent();
   }
 
@@ -54,6 +69,7 @@ class XsonBuilder {
     String rootClassName,
     String classSuffix,
     bool fromBuildRunner,
+    PropertyRenameHandler handler,
   }) {
     _fromBuildRunner = fromBuildRunner ?? false;
     _fileSpec = FileSpec.build();
@@ -63,6 +79,7 @@ class XsonBuilder {
     _classCache.clear();
     _fromJsonCache.clear();
     _toJsonCache.clear();
+    _propertyRenameHandler = handler ?? PropertyRenameHandlers.defaultHandler;
     _resolveDependencies();
     _iterate(element: xson.decodeToJsonElement(json), ancestors: []);
     _resolveCaches();
@@ -160,7 +177,7 @@ class XsonBuilder {
     }
     if (property == null) throw JsonIllegalStateException();
 
-    return _renameProperty(property);
+    return _renameProperty(_calcUniqueKey(ancestors), property);
   }
 
   int _calcListDepth(TypeToken type) {
@@ -234,13 +251,14 @@ class XsonBuilder {
     );
   }
 
-  PropertySpec _renameProperty(PropertySpec property) {
+  String _calcUniqueKey(List<_AncestorInfo> ancestors) {
+    return ancestors.map((o) => o.isObject ? ".${o.objectKey}" : "[${o.arrayIndex}]").join();
+  }
+
+  PropertySpec _renameProperty(String uniqueKey, PropertySpec property) {
+    if (property.name == null) return property;
     String oldName = property.name;
-    if (oldName == null) return property;
-    String newName = oldName;
-    newName = newName.replaceAll(RegExp("[^a-zA-Z0-9\$_]"), "_");
-    if (_DART_KEYWORDS.contains(newName)) newName = "\$$newName";
-    if (newName.startsWith(RegExp("\\d"))) newName = "\$$newName";
+    String newName = _propertyRenameHandler(uniqueKey, oldName);
     property.name = newName;
     if (oldName != newName) {
       MetaSpec jsonKey = _findOrCreateJsonKeyOfProperty(property);
