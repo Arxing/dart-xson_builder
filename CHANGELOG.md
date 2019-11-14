@@ -5,3 +5,7 @@
 ## 1.0.1
 
 - support bean's key renamed.
+
+## 1.0.2
+
+- `XFile` recodes with version `1.1.0`

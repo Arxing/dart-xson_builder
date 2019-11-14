@@ -41,7 +41,7 @@ class XsonBuilder {
       fromBuildRunner: fromBuildRunner,
       handler: handler,
     );
-    return dartFile.outputSync(XFile.combine(outputDir, outputFileName).file.path);
+    return dartFile.outputSync(XFile.concat(outputDir, outputFileName).file.path);
   }
 
   String generateAndGetFileContent(

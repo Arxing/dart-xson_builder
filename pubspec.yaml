@@ -1,7 +1,7 @@
 name: xson_builder
 description: >-
   A library to help you easily generate dart json bean.
-version: 1.0.1
+version: 1.0.2
 homepage: https://github.com/Arxing/dart-xson_builder
 author: Arxing <meiswind711108@gmail.com>
 pubpage: https://pub.dev/packages/xson_builder
@@ -18,7 +18,7 @@ dependencies:
   xson_annotation: ^1.0.2+1
   source_gen: ^0.9.4+5
   build: ^1.2.1
-  xfile: ^1.0.4
+  xfile: ^1.1.0
   analyzer: '>=0.37.1 <0.39.0'
 
 dev_dependencies:
