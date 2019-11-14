@@ -9,3 +9,7 @@
 ## 1.0.2
 
 - `XFile` recodes with version `1.1.0`
+
+## 1.0.3
+
+- support json content comments ignores

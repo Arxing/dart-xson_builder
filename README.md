@@ -1,5 +1,5 @@
 ![](https://img.shields.io/badge/language-dart-orange.svg)
-![](https://img.shields.io/badge/pub-v1.0.0-blue.svg)
+![](https://img.shields.io/badge/pub-v1.0.3-blue.svg)
 
 `xson_builder` can help you to easily generate dart json bean by json source.
 You can also change root class name and class name's suffix. 

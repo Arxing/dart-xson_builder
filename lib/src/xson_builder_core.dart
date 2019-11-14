@@ -63,6 +63,8 @@ class XsonBuilder {
     return dartFile.outputContent();
   }
 
+  String _ignoreComments(String json) => json.split("\n").where((line) => !line.trimLeft().startsWith("//")).join("\n");
+
   DartFile _generate(
     String outputFileName,
     String json, {
@@ -81,7 +83,7 @@ class XsonBuilder {
     _toJsonCache.clear();
     _propertyRenameHandler = handler ?? PropertyRenameHandlers.defaultHandler;
     _resolveDependencies();
-    _iterate(element: xson.decodeToJsonElement(json), ancestors: []);
+    _iterate(element: xson.decodeToJsonElement(_ignoreComments(json)), ancestors: []);
     _resolveCaches();
     return DartFile.fromFileSpec(_fileSpec);
   }
