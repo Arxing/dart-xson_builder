@@ -217,13 +217,16 @@ class XsonBuilder {
     for (var i = 0; i < listDepth; i++) {
       code = "($variable as List).map(($variable) => $code).toList()";
     }
-    code += ";";
+
+    List<String> codes = [];
+    codes.add("if($variable == null) return [];");
+    codes.add("return $code;");
 
     return MethodSpec.build(
       methodName,
       parameters: [ParameterSpec.normal(variable, type: TypeToken.ofDynamic())],
       returnType: listType,
-      codeBlock: CodeBlockSpec.line(code),
+      codeBlock: CodeBlockSpec.lines(codes),
       isStatic: true,
     );
   }
@@ -407,7 +410,7 @@ class XsonBuilder {
       "fromJson",
       parameters: [ParameterSpec.normal("json", type: TypeToken.ofDynamic())],
       codeBlock: CodeBlockSpec.lines([
-        'if (json is List) return Sample1Bean(json.map((element) => Sample1List0Bean.fromJson(element)).toList());',
+        'if (json is List) return $className(json.map((element) => $className.fromJson(element)).toList());',
         'throw "Call `fromJson` on ListBean, but input json is not list.";'
       ]),
     );

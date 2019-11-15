@@ -13,3 +13,7 @@
 ## 1.0.3
 
 - support json content comments ignores
+
+## 1.0.4
+
+- fix `_fromJsonXXX` for null input
